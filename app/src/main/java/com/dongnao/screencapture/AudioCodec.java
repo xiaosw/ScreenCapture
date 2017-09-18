@@ -68,12 +68,10 @@ public class AudioCodec extends Thread {
 
     @Override
     public void run() {
-//        IFrame iFrame = new IFrame();
-//        iFrame.setBuffer(audioDecoderSpecificInfo);
-//        iFrame.setType(IFrame.RTMP_PACKET_TYPE_AUDIO_HEAD);
-//        RtmpManager.getInstance().addFrame(iFrame);
-        RtmpManager.getInstance().sendData(audioDecoderSpecificInfo, audioDecoderSpecificInfo.length, RtmpManager
-                .RTMP_PACKET_TYPE_AUDIO_HEAD, 0);
+        IFrame iFrame = new IFrame();
+        iFrame.setBuffer(audioDecoderSpecificInfo);
+        iFrame.setType(IFrame.RTMP_PACKET_TYPE_AUDIO_HEAD);
+        RtmpManager.getInstance().addFrame(iFrame);
         audioRecord.startRecording();
         byte[] buffer = new byte[2048];
         while (isRecoding) {
@@ -101,13 +99,11 @@ public class AudioCodec extends Thread {
                     startTime = bufferInfo.presentationTimeUs;
                     Log.i(TAG, "audio tms " + startTime);
                 }
-//                iFrame = new IFrame();
-//                iFrame.setBuffer(outData);
-//                iFrame.setType(IFrame.RTMP_PACKET_TYPE_AUDIO_DATA);
-//                iFrame.setTms(bufferInfo.presentationTimeUs - startTime);
-//                RtmpManager.getInstance().addFrame(iFrame);
-                RtmpManager.getInstance().sendData(outData, outData.length, RtmpManager
-                        .RTMP_PACKET_TYPE_AUDIO_DATA, bufferInfo.presentationTimeUs - startTime);
+                iFrame = new IFrame();
+                iFrame.setBuffer(outData);
+                iFrame.setType(IFrame.RTMP_PACKET_TYPE_AUDIO_DATA);
+                iFrame.setTms(bufferInfo.presentationTimeUs - startTime);
+                RtmpManager.getInstance().addFrame(iFrame);
                 mediaCodec.releaseOutputBuffer(index, false);
                 index = mediaCodec.dequeueOutputBuffer(bufferInfo, 0);
             }

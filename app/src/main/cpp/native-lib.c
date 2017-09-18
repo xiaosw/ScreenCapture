@@ -65,9 +65,6 @@ int sendPacket(RTMPPacket *packet) {
 int sendVideo(char *buf, int len, long tms) {
     int ret;
     do {
-        if (!(ret = rtmp_video && Java_com_dongnao_screencapture_RtmpManager_isConnect(0, 0))) {
-            break;
-        }
         if (buf[4] == 0x67) {//sps pps
             if (rtmp_video && (!rtmp_video->pps || !rtmp_video->sps)) {
                 parseVideoConfiguration(buf, len, rtmp_video);
@@ -89,9 +86,6 @@ int sendVideo(char *buf, int len, long tms) {
 int sendAudio(char *buf, int len, int type, int tms) {
     int ret;
     do {
-        if (!(ret = rtmp_video && Java_com_dongnao_screencapture_RtmpManager_isConnect(0, 0))) {
-            break;
-        }
         RTMPPacket *packet = packetAudioData(buf, len, type, tms, rtmp_video);
         ret = sendPacket(packet);
     } while (0);

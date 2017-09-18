@@ -17,9 +17,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class RtmpManager {
 
-    public static final int RTMP_PACKET_TYPE_VIDEO = 0;
-    public static final int RTMP_PACKET_TYPE_AUDIO_HEAD = 1;
-    public static final int RTMP_PACKET_TYPE_AUDIO_DATA = 2;
 
     public static final int STATUS_START = 0;
     public static final int STATUS_STOP = 1;

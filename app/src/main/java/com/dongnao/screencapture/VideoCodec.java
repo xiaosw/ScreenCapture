@@ -101,14 +101,11 @@ public class VideoCodec extends Thread {
                     startTime = bufferInfo.presentationTimeUs / 1000;
                     Log.i(TAG, "video tms " + startTime);
                 }
-//                IFrame iFrame = new IFrame();
-//                iFrame.setBuffer(outData);
-//                iFrame.setType(IFrame.RTMP_PACKET_TYPE_VIDEO);
-//                iFrame.setTms((bufferInfo.presentationTimeUs / 1000) - startTime);
-//                RtmpManager.getInstance().addFrame(iFrame);
-                RtmpManager.getInstance().sendData(outData, outData.length, RtmpManager
-                        .RTMP_PACKET_TYPE_VIDEO, (bufferInfo
-                        .presentationTimeUs / 1000) - startTime);
+                IFrame iFrame = new IFrame();
+                iFrame.setBuffer(outData);
+                iFrame.setType(IFrame.RTMP_PACKET_TYPE_VIDEO);
+                iFrame.setTms((bufferInfo.presentationTimeUs / 1000) - startTime);
+                RtmpManager.getInstance().addFrame(iFrame);
                 mediaCodec.releaseOutputBuffer(index, false);
             }
         }
