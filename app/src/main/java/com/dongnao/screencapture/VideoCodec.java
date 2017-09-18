@@ -77,12 +77,11 @@ public class VideoCodec extends Thread {
     @Override
     public void run() {
         while (isRecoding) {
-            if (timeStamp != 0) {//1000毫秒后
+            if (timeStamp != 0) {//2000毫秒后
                 if (System.currentTimeMillis() - timeStamp >= 2_000) {
                     Bundle params = new Bundle();
                     params.putInt(MediaCodec.PARAMETER_KEY_REQUEST_SYNC_FRAME, 0);
                     mediaCodec.setParameters(params);
-                    Log.i(TAG, "强制关键帧");
                     timeStamp = System.currentTimeMillis();
                 }
             } else {
@@ -102,11 +101,14 @@ public class VideoCodec extends Thread {
                     startTime = bufferInfo.presentationTimeUs / 1000;
                     Log.i(TAG, "video tms " + startTime);
                 }
-                IFrame iFrame = new IFrame();
-                iFrame.setBuffer(outData);
-                iFrame.setType(IFrame.RTMP_PACKET_TYPE_VIDEO);
-                iFrame.setTms((bufferInfo.presentationTimeUs / 1000) - startTime);
-                RtmpManager.getInstance().addFrame(iFrame);
+//                IFrame iFrame = new IFrame();
+//                iFrame.setBuffer(outData);
+//                iFrame.setType(IFrame.RTMP_PACKET_TYPE_VIDEO);
+//                iFrame.setTms((bufferInfo.presentationTimeUs / 1000) - startTime);
+//                RtmpManager.getInstance().addFrame(iFrame);
+                RtmpManager.getInstance().sendData(outData, outData.length, RtmpManager
+                        .RTMP_PACKET_TYPE_VIDEO, (bufferInfo
+                        .presentationTimeUs / 1000) - startTime);
                 mediaCodec.releaseOutputBuffer(index, false);
             }
         }
@@ -119,6 +121,7 @@ public class VideoCodec extends Thread {
         virtualDisplay = null;
         mediaProjection.stop();
         mediaProjection = null;
+        Log.i(TAG, "release video");
     }
 
     public void startCoding() {
@@ -128,7 +131,10 @@ public class VideoCodec extends Thread {
 
     public void stopCoding() {
         isRecoding = false;
-        startTime = 0;
-        Log.i(TAG, "release video");
+        try {
+            join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }

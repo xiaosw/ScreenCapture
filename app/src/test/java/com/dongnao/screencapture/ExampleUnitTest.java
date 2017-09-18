@@ -1,5 +1,7 @@
 package com.dongnao.screencapture;
 
+import android.os.SystemClock;
+
 import org.junit.Test;
 
 import static org.junit.Assert.*;

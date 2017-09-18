@@ -9,9 +9,7 @@ add_subdirectory(src/main/cpp/librtmp)
 
 add_library(
              native-lib
-
              SHARED
-
              src/main/cpp/native-lib.c )
 
 
@@ -19,5 +17,5 @@ add_library(
 
 target_link_libraries(
                        native-lib
-    rtmp
+                        rtmp
                       log )
