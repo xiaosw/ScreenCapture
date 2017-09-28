@@ -12,7 +12,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created by xiang on 2017/9/11.
- * 动脑学院 版权所有
  */
 
 public class RtmpManager {
@@ -175,7 +174,9 @@ public class RtmpManager {
 
     private native boolean isConnect();
 
+    private native void disConnect();
+
     public native boolean sendData(byte[] data, int len, int type, long tms);
 
-    private native void disConnect();
+
 }

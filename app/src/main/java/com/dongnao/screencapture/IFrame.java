@@ -2,7 +2,6 @@ package com.dongnao.screencapture;
 
 /**
  * Created by xiang on 2017/9/11.
- * 动脑学院 版权所有
  */
 
 public class IFrame {

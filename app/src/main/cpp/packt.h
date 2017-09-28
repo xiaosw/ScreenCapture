@@ -13,17 +13,17 @@
 
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO,"RTMP",__VA_ARGS__)
 
-
 typedef struct {
     int sps_len;
     int pps_len;
     char *sps;
     char *pps;
-    int stream_id;
-} RTMP_VIDEO;
+    RTMP *rtmp;
+} Pusher;
 
-RTMPPacket *packetVideoDecode(RTMP_VIDEO *rtmp_video) {
-    int body_size = 13 + rtmp_video->sps_len + 3 + rtmp_video->pps_len;
+
+RTMPPacket *packetVideoDecode(Pusher *pusher) {
+    int body_size = 13 + pusher->sps_len + 3 + pusher->pps_len;
     RTMPPacket *packet = (RTMPPacket *) malloc(sizeof(RTMPPacket));
     RTMPPacket_Alloc(packet, body_size);
     int i = 0;
@@ -37,25 +37,25 @@ RTMPPacket *packetVideoDecode(RTMP_VIDEO *rtmp_video) {
     packet->m_body[i++] = 0x00;
     //AVC sequence header
     packet->m_body[i++] = 0x01;   //configurationVersion 版本号 1
-    packet->m_body[i++] = rtmp_video->sps[1]; //profile 如baseline、main、 high
+    packet->m_body[i++] = pusher->sps[1]; //profile 如baseline、main、 high
 
-    packet->m_body[i++] = rtmp_video->sps[2]; //profile_compatibility 兼容性
-    packet->m_body[i++] = rtmp_video->sps[3]; //profile level
+    packet->m_body[i++] = pusher->sps[2]; //profile_compatibility 兼容性
+    packet->m_body[i++] = pusher->sps[3]; //profile level
     packet->m_body[i++] = 0xFF; // reserved（111111） + lengthSizeMinusOne（2位 nal 长度） 总是0xff
     //sps
     packet->m_body[i++] = 0xE1; //reserved（111） + lengthSizeMinusOne（5位 sps 个数） 总是0xe1
     //sps length 2字节
-    packet->m_body[i++] = (rtmp_video->sps_len >> 8) & 0xff; //第0个字节
-    packet->m_body[i++] = rtmp_video->sps_len & 0xff;        //第1个字节
-    memcpy(&packet->m_body[i], rtmp_video->sps, rtmp_video->sps_len);
-    i += rtmp_video->sps_len;
+    packet->m_body[i++] = (pusher->sps_len >> 8) & 0xff; //第0个字节
+    packet->m_body[i++] = pusher->sps_len & 0xff;        //第1个字节
+    memcpy(&packet->m_body[i], pusher->sps, pusher->sps_len);
+    i += pusher->sps_len;
 
     /*pps*/
     packet->m_body[i++] = 0x01; //pps number
     //pps length
-    packet->m_body[i++] = (rtmp_video->pps_len >> 8) & 0xff;
-    packet->m_body[i++] = rtmp_video->pps_len & 0xff;
-    memcpy(&packet->m_body[i], rtmp_video->pps, rtmp_video->pps_len);
+    packet->m_body[i++] = (pusher->pps_len >> 8) & 0xff;
+    packet->m_body[i++] = pusher->pps_len & 0xff;
+    memcpy(&packet->m_body[i], pusher->pps, pusher->pps_len);
 
     packet->m_packetType = RTMP_PACKET_TYPE_VIDEO;
     packet->m_nBodySize = body_size;
@@ -63,11 +63,11 @@ RTMPPacket *packetVideoDecode(RTMP_VIDEO *rtmp_video) {
     packet->m_nTimeStamp = 0;
     packet->m_hasAbsTimestamp = 0;
     packet->m_headerType = RTMP_PACKET_SIZE_LARGE;
-    packet->m_nInfoField2 = rtmp_video->stream_id;
+    packet->m_nInfoField2 = pusher->rtmp->m_stream_id;
     return packet;
 }
 
-RTMPPacket *packetVideoData(char *buf, int len, const long tms, RTMP_VIDEO *rtmp_video) {
+RTMPPacket *packetVideoData(char *buf, int len, const long tms, Pusher *pusher) {
     buf += 4;
     len -= 4;
     int body_size = len + 9;
@@ -100,13 +100,13 @@ RTMPPacket *packetVideoData(char *buf, int len, const long tms, RTMP_VIDEO *rtmp
     packet->m_nTimeStamp = tms;
     packet->m_hasAbsTimestamp = 0;
     packet->m_headerType = RTMP_PACKET_SIZE_LARGE;
-    packet->m_nInfoField2 = rtmp_video->stream_id;
+    packet->m_nInfoField2 = pusher->rtmp->m_stream_id;
     return packet;
 
 }
 
 RTMPPacket *packetAudioData(const char *buf, const int len, const int type, const long tms,
-                            RTMP_VIDEO *rtmp_video) {
+                            Pusher *pusher) {
     int body_size = len + 2;
     RTMPPacket *packet = (RTMPPacket *) malloc(sizeof(RTMPPacket));
     RTMPPacket_Alloc(packet, body_size);
@@ -125,12 +125,12 @@ RTMPPacket *packetAudioData(const char *buf, const int len, const int type, cons
     packet->m_nTimeStamp = tms;
     packet->m_hasAbsTimestamp = 0;
     packet->m_headerType = RTMP_PACKET_SIZE_LARGE;
-    packet->m_nInfoField2 = rtmp_video->stream_id;
+    packet->m_nInfoField2 = pusher->rtmp->m_stream_id;
     return packet;
 }
 
 
-void parseVideoConfiguration(char *data, int len, RTMP_VIDEO *rtmp_video) {
+void parseVideoConfiguration(char *data, int len, Pusher *pusher) {
     for (int i = 0; i < len; i++) {
         //0x00 0x00 0x00 0x01
         if (i + 4 < len) {
@@ -142,14 +142,14 @@ void parseVideoConfiguration(char *data, int len, RTMP_VIDEO *rtmp_video) {
                 //找到pps
                 if ((data[i + 4] & 0x1f) == 8) {
                     //去掉界定符
-                    rtmp_video->sps_len = i - 4;
-                    rtmp_video->sps = (char *) malloc(sizeof(char) * rtmp_video->sps_len);
-                    memcpy(rtmp_video->sps, data + 4, rtmp_video->sps_len);
-                    rtmp_video->pps_len = len - (4 + rtmp_video->sps_len) - 4;
-                    rtmp_video->pps = (char *) malloc(sizeof(char) * rtmp_video->pps_len);
-                    memcpy(rtmp_video->pps, data + 4 + rtmp_video->sps_len + 4,
-                           rtmp_video->pps_len);
-                    LOGI("sps:%d pps:%d", rtmp_video->sps_len, rtmp_video->pps_len);
+                    pusher->sps_len = i - 4;
+                    pusher->sps = (char *) malloc(sizeof(char) * pusher->sps_len);
+                    memcpy(pusher->sps, data + 4, pusher->sps_len);
+                    pusher->pps_len = len - (4 + pusher->sps_len) - 4;
+                    pusher->pps = (char *) malloc(sizeof(char) * pusher->pps_len);
+                    memcpy(pusher->pps, data + 4 + pusher->sps_len + 4,
+                           pusher->pps_len);
+                    LOGI("sps:%d pps:%d", pusher->sps_len, pusher->pps_len);
                     break;
                 }
             }

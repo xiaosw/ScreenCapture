@@ -34,7 +34,7 @@ public class MainActivity extends Activity implements RtmpManager.Callback {
     public void startlive(View view) {
         RtmpManager.getInstance().startScreenCapture(this, "rtmp://192.168.50.109/myapp/test");
         //RtmpManager.getInstance().startScreenCapture(this, "rtmp://send3.douyu
-        // .com/live/3251491rcWeNgVtN?wsSecret=5a490a7d166273eb3c29eaf6de7bc38f&wsTime=59be2dbc
+        // .com/live/3251491rcWeNgVtN?wsSecret=6b671a7d166273eb3c29eaf6des2kd34&wsTime=59be2dbc
         // &wsSeek=off");
     }
 

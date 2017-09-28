@@ -15,7 +15,6 @@ import java.nio.ByteBuffer;
 
 /**
  * Created by xiang on 2017/9/11.
- * 动脑学院 版权所有
  */
 
 public class VideoCodec extends Thread {
@@ -80,6 +79,7 @@ public class VideoCodec extends Thread {
             if (timeStamp != 0) {//2000毫秒后
                 if (System.currentTimeMillis() - timeStamp >= 2_000) {
                     Bundle params = new Bundle();
+                    //立即刷新 让下一帧是关键帧
                     params.putInt(MediaCodec.PARAMETER_KEY_REQUEST_SYNC_FRAME, 0);
                     mediaCodec.setParameters(params);
                     timeStamp = System.currentTimeMillis();

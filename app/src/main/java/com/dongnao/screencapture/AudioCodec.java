@@ -14,7 +14,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created by xiang on 2017/9/11.
- * 动脑学院 版权所有
  */
 
 public class AudioCodec extends Thread {
@@ -65,6 +64,7 @@ public class AudioCodec extends Thread {
                 AudioFormat.ENCODING_PCM_16BIT, minBufferSize);
         return true;
     }
+
 
     @Override
     public void run() {
